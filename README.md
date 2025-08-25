@@ -8,3 +8,5 @@ For the most up-to-date requirements on formatting and required components, plea
 https://www.yorku.ca/gradstudies/students/current-students/thesis-and-dissertation/doctoral-dissertation/
 
 Additional instructions and advice are provided in the comments at the beginning of both thesis.tex and yorku.cls. This template also includes sample excerpts, drawn from Michael's dissertation, to demonstrate how to create and format tables, figures, and references to appendices.
+
+I highly recommend using Overleaf.com to edit/write with this template. You can upload all of the content included in this repository (except for the .git stuff), and it should compile right away. 
