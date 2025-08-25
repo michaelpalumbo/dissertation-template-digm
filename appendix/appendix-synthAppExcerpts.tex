@@ -1,0 +1,1180 @@
+\chapter{Code Excerpts from the Synth View}
+\label{app:synthAppExcerpts}
+
+\textit{Please note that this appendix was included in Michael Palumbo's dissertation. It is included here to demonstrate how to reference a section within an appendix in the main document. Search for the following text in thesis.tex for how this works: "see Listing~\ref{lst:loadVersion-function} in Appendix~\ref{app:synthAppExcerpts}"}
+
+A selection of notable code listings from \texttt{synthApp.js}, the Script for the Synth View Window. Each excerpt is documented in this appendix, with its corresponding location in \texttt{synthApp.js} indicated in the Lines column below.
+
+\begin{table}[h]
+  \centering
+  \caption[Code Excerpts: Synth View]{Code excerpts from the Synth View}
+  \begin{tabular}{@{}llll@{}}
+    \toprule
+    \textbf{Listing} & \textbf{Excerpt} & \textbf{Purpose} & \textbf{Lines} \\
+    \midrule
+    \ref{lst:automerge-initialization} & startAutomerge() & Initializes Automerge documents & 691-820 \\
+
+\ref{lst:createNewPatchHistory} & createNewPatchHistory() & Clears patch history, DSP \& Cytoscape & 1097-1274 \\
+
+\ref{lst:applyChange-examples} & applyChange() examples & paramUpdate \& gesture changeNodes & 3536-3578 \\
+
+\ref{lst:applyChange} & applyChange() & Manages document updates & 834-961 \\
+
+\ref{lst:loadVersion-function} & loadVersion() & Handles changeNodes \& branching & 1505-1656 \\
+
+\ref{lst:updateSynthWorklet-function} & updateSynthWorklet() & Handles changes to DSP &  4873-4936 \\
+
+\ref{lst:updateCytoscapeFromDocument} & updateCytoscapeFromDocument() & Handles changes to Cytoscape synth &  1302-1405 \\
+
+\ref{lst:createMerge-function} & createMerge() & Merges two changeNodes & 1822–1901 \\
+\ref{lst:startCable-function} & startCable() & Creates a temporary cable & 5213-5255 \\
+\ref{lst:handleRemoteCables-function} & handleRemoteCables() & Renders peer temporary cables & 5257–5314 \\
+\ref{lst:isEdgeInCycle-function} & isEdgeInCycle() & Graph cycle detection & 5581–5703 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Automerge Initialization}
+
+\begin{lstlisting}[language=JavaScript, caption={Initial peer setup when joining a room}, label={lst:automerge-initialization}]
+let automergeRunning = false
+//* AUTOMERGE IMPLEMENTATION
+async function startAutomerge () {
+    automergeRunning = true
+    // Load Automerge asynchronously and assign it to the global variable
+    Automerge = await import('@automerge/automerge');
+    
+    // if the room contains 2 peers:
+    if(room && roomDetails.peer1 && roomDetails.peer2){
+        patchHistory = Automerge.init();
+        syncState = Automerge.initSyncState(); // this must exist here
+        console.log("Joining active room. Waiting for sync.");
+        holdSnackbar('Syncing with peers, please wait...')
+        // arm the reload function. if peer connection takes too long, it will reload the page
+        forceReload(true)
+        return
+    } else {
+        const saved = await loadDocument(patchHistoryKey);
+        
+        if (saved) {
+            patchHistory = Automerge.load(saved);
+        } else {
+            patchHistory = Automerge.from({
+                title: "Forking Paths Synth",
+                forked_from_id: null, // used by the database to either determine this as the root of a tree of patch histories, or a fork from a stored history 
+                authors: [], // this will get added to as the doc is forked from the database
+                branches: {},
+                branchOrder: [],
+                docs: {},
+                head: {
+                    hash: null,
+                    branch: null
+                } ,
+                userSettings: {
+                    focusNewBranch: true 
+                },
+                sequencer: {
+                    bpm: 120,
+                    ms: 500,
+                    traversalMode: 'Sequential'
+                },
+                synth: {
+                    rnboDeviceCache: null,
+                }
+            });
+            console.log("No saved patchHistory found. Starting fresh:", patchHistoryKey);
+            await saveDocument(patchHistoryKey, Automerge.save(patchHistory));
+        }
+    }
+            
+    syncState = Automerge.initSyncState()
+
+    // * synth changes document
+    docID = 'forkingPathsDoc'; // Unique identifier for the document
+    // Load the document from patchHistory's store in IndexedDB or create a new one if it doesn't exist
+
+    // currentBranch = await loadDocument(docID);
+    // if patchHistory doesn't contain a document, create a new one
+    if (!patchHistory.docs[patchHistory.head.branch]) {
+
+        currentBranch = Automerge.init();
+
+        // load synthFile from indexedDB
+        // let synthFile = JSON.parse(localStorage.getItem('synthFile'))
+        // console.log('synthFile', synthFile)
+        if (patchHistory.synthFile) {
+           
+            createNewPatchHistory(patchHistory.synthFile)
+            // const firstChangeLabel = synthFile.name
+            // ? `load_synth:${synthFile.name}`
+            // : 'load_synth:unnamed';
+        
+            // currentBranch = Automerge.change(currentBranch, firstChangeLabel, (currentBranch) => {
+            //     currentBranch.title = config.patchHistory.firstBranchName;
+            //     currentBranch.changeNode = { msg: firstChangeLabel };
+            //     currentBranch.elements = synthFile.visualGraph?.elements?.nodes || [];
+            //     currentBranch.synth = {
+            //         graph: synthFile.audioGraph || {
+            //         modules: {},
+            //         connections: []
+            //         }
+            //     };
+            //     currentBranch.sequencer = { tableData: [] };
+            // });
+        
+            // const hash = Automerge.getHeads(currentBranch)[0];
+            // previousHash = hash;
+        
+            // patchHistory = Automerge.change(patchHistory, (patchHistory) => {
+            //     patchHistory.branches[config.patchHistory.firstBranchName] = {
+            //         head: hash,
+            //         root: null,
+            //         parent: null,
+            //         history: [{ hash: hash, parent: null, msg: firstChangeLabel }]
+            //     };
+            
+            //     patchHistory.docs[config.patchHistory.firstBranchName] = Automerge.save(currentBranch);
+            //     patchHistory.head.branch = config.patchHistory.firstBranchName;
+            //     patchHistory.head.hash = hash;
+            //     patchHistory.branchOrder.push(config.patchHistory.firstBranchName);
+            // });
+
+            // // send doc to history app
+            // reDrawHistoryGraph()
+        
+        } else {
+            console.log("No synth file found. currentBranch initialized but not changed.");
+            previousHash = null;
+
+            try {
+                    // Fetch the Demo Synth
+                const response = await fetch(`/assets/synths/${import.meta.env.VITE_FIRST_SYNTH}.fpsynth`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                // Parse the response as JSON
+                const fileContent = await response.json();
+                
+                // Store the JSON string in localStorage if needed
+                localStorage.setItem('synthFile', JSON.stringify(fileContent));
+                
+                // Process the JSON content
+                createNewPatchHistory(fileContent);
+        
+                // enable new history button now that a synth has been loaded
+                // UI.menus.file.newPatchHistory.disabled = false
+              
+            } catch (error) {
+                console.error("Error loading template file:", error);
+            }
+       
+
+        
+            // patchHistory = Automerge.change(patchHistory, (patchHistory) => {
+            //     // Only set up empty branch patchHistorydata — no doc yet
+            //     patchHistory.branches[config.patchHistory.firstBranchName] = {
+            //         head: null,
+            //         root: null,
+            //         parent: null,
+            //         history: []
+            //     };
+            //     patchHistory.head.branch = config.patchHistory.firstBranchName;
+            //     patchHistory.head.hash = null;
+            //     patchHistory.branchOrder.push(config.patchHistory.firstBranchName);
+            // });
+        }
+
+    } else {
+
+        // patchHistory does contain at least one document, so grab whichever is the one that was last looked at
+        currentBranch = Automerge.load(patchHistory.docs[patchHistory.head.branch]);
+
+        // wait 1 second before loading content (give the audio worklet a moment to load)
+        setTimeout(()=>{
+            updateSynthWorklet('loadVersion', currentBranch.synth.graph, null, currentBranch.type)
+
+            updateCytoscapeFromDocument(currentBranch, 'buildUI');
+            
+            previousHash = patchHistory.head.hash
+            
+            // send doc to history app
+            reDrawHistoryGraph()
+
+            // load the draw canvas
+            if(currentBranch.drawing){
+                loadCanvasVersion(currentBranch.drawing)
+            }
+
+        }, 1000);
+    }
+}
+
+\end{lstlisting}
+
+\section{createNewPatchHistory()}
+
+\begin{lstlisting}[language=JavaScript, caption={Clears the patchHistory Automerge document, clears DSP and Cytoscape.js states, reloads the current .fpSynth file as the first change in the patchHistory and redraws UI elements}, label={lst:createNewPatchHistory}]
+function createNewPatchHistory(synthFile){
+    // clear the pen tool interface
+    resetDrawing()
+    // delete the document in the indexedDB instance
+    deleteDocument('patchHistory')
+    // clear DSP
+    updateSynthWorklet('clearGraph')
+    // ensure floating UI container divs are removed
+    clearparamContainerDivs()
+    // clear the sequencer
+    sendMsgToHistoryApp({
+        appID: 'forkingPathsMain',
+        cmd: 'newPatchHistory'
+            
+    })
+    // tell server to erase the patchHistory & send a blank DAG to client(s)
+    ws.send(JSON.stringify({
+        cmd: 'clearHistoryGraph'
+    }))
+
+    // Clear existing elements from Cytoscape instance
+    synthGraphCytoscape.elements().remove();
+    
+    // remove all dynamicly generated UI overlays (knobs, umenus, etc)
+    removeUIOverlay('allNodes')
+    // ensure their container divs are removed too
+    clearparamContainerDivs()
+    // init new patch history for Automerge
+    let patchHistoryJSON = {
+        title: "Forking Paths Patch History",
+        forked_from_id: null, // used by the database to either determine this as the root of a tree of patch histories, or a fork from a stored history 
+        authors: [], // this will get added to as the doc is forked from the database
+        branches: {},
+        branchOrder: [],
+        docs: {},
+        head: {
+            hash: null,
+            branch: config.patchHistory.firstBranchName
+        },
+        
+        userSettings: {
+            focusNewBranch:false 
+        },
+        sequencer: {
+            bpm: 120,
+            ms: 500,
+            traversalMode: 'Sequential'
+        },
+        synth: {
+            rnboDeviceCache: null,
+        },
+
+    }
+    if(synthFile){
+        patchHistoryJSON.synthFile = synthFile
+    } else if (patchHistory.synthFile){
+        // if a synth file had been previously loaded, load it again
+        patchHistoryJSON.synthFile = patchHistory.synthFile
+        synthFile = patchHistory.synthFile
+    }
+    // assign patch history to automerge
+    patchHistory = Automerge.from(patchHistoryJSON)
+    // clear the current automerge doc
+    currentBranch = Automerge.init();
+
+    if(synthFile || patchHistory.synthFile){
+
+        if(!patchHistory.synthFile) { synthFile = patchHistory.synthFile }
+
+        let amMsg = makeChangeMessage(config.patchHistory.firstBranchName, `loaded ${synthFile.filename}`)
+    
+        // Apply initial changes to the new document
+        currentBranch = Automerge.change(currentBranch, amMsg, (currentBranch) => {
+            currentBranch.title = config.patchHistory.firstBranchName;
+            currentBranch.elements = [ ] 
+            patchHistory.synthFile.visualGraph.elements.nodes.forEach((node)=>{
+                currentBranch.elements.push(node)
+            })
+            
+            currentBranch.synth = {
+                graph: synthFile.audioGraph,
+                connections: []
+            }
+            
+            audioGraphDirty = true
+
+            currentBranch.drawing = []
+        }, onChange, `loaded ${synthFile.filename}`);
+
+        updateSynthWorklet('loadVersion', currentBranch.synth.graph, null, currentBranch.changeNode)
+        
+        // load synth graph from file into cytoscape
+        synthGraphCytoscape.json(patchHistory.synthFile.visualGraph)
+
+        synthFile.visualGraph.elements.nodes.forEach((node, index)=>{
+            // set module grabbable to false -- prevents module movements in main view
+            if(node.classes === ':parent'){
+                // synthFile.visualGraph.elements.nodes[index].grabbable = false
+                // lock the module's position
+                synthGraphCytoscape.getElementById(node.data.id).lock();
+            }
+            // create overlays
+            if(node.classes === 'paramAnchorNode'){
+                let value = patchHistory.synthFile.audioGraph.modules[node.data.parent].params[node.data.label]
+                createFloatingOverlay(node.data.parent, node, index, value)
+        
+                // index++
+            }
+        })
+
+
+        setTimeout(() => {
+            updateKnobPositionAndScale('all');
+            // Make all nodes non-draggable
+            
+        }, 10); // Wait for the current rendering cycle to complete
+    } else { 
+        console.log('non synthFile')
+        console.warn('synthFile nor patchHistory.synthFile not found')
+        
+    }
+
+    let hash = Automerge.getHeads(currentBranch)[0]
+    previousHash = hash
+
+    let msg = 'blank_patch'
+    if (synthFile){
+        msg = `loaded ${synthFile.filename}`
+    }
+    patchHistory = Automerge.change(patchHistory, (patchHistory) => {
+        patchHistory.branches[config.patchHistory.firstBranchName] = {
+            head: hash,
+            root: null,
+            parent: null,
+            // doc: currentBranch,
+            history: [ {hash: hash, parent: null, msg: msg} ] 
+        }
+        
+        // encode the doc as a binary object for efficiency
+        patchHistory.docs[config.patchHistory.firstBranchName] = Automerge.save(currentBranch)
+        patchHistory.head.branch = config.patchHistory.firstBranchName
+        patchHistory.head.hash = hash 
+        patchHistory.branchOrder.push(patchHistory.head.branch)
+        patchHistory.synthFile = synthFile
+        
+    });     
+        
+    docUpdated = true
+    previousHash = patchHistory.head.hash
+    // send doc to history app
+    reDrawHistoryGraph()
+
+    // store it in the database
+    const patch_binary = fromByteArray(Automerge.save(patchHistory))
+    ws.send(JSON.stringify({
+        cmd: 'newPatchHistory',
+        data: {
+            name: `${chance.animal()} ${uuidv7().split('-')[2]}`,
+            authors: [ thisPeerID ],
+            description: null,
+            modules: ['test'], // can be pulled from your patch graph
+            synth_template: patchHistory.synthFile, // JSON object
+            patch_binary: patch_binary, // base64-encoded string
+            forked_from_id: patchHistory.forked_from_id, // or null if this is a root version
+        }
+    }))
+
+    // get a binary from the new patchHistory
+    const fullBinary = Automerge.save(patchHistory);
+    // send it to any connected peer(s)
+    let message = {
+        cmd: 'replacePatchHistory',
+        data: fromByteArray(fullBinary)  // base64 encoded or send as Uint8Array directly if channel supports it
+    }
+    // sync with peer(s)
+    sendDataChannelMessage(message)
+}
+
+\end{lstlisting}
+
+\section{applyChange Examples}
+% NOTE: this is already being referenced in the FP chapter, so we need to make sure it is documented here!
+
+\begin{lstlisting}[language=JavaScript, caption={Creates a new changeNode, updates the DSP graph, adds both to the patch history. There are many instances of this throughout the synthApp.js, and the method for creating paramUpdate or gesture changeNodes is what is documented here.}, label={lst:applyChange-examples}]
+// Listen for mouse up event on the document
+document.addEventListener('mouseup', function(event) {
+    hid.mouse.left = false
+    
+    // if the player has been playing with a param knob, we need to store it in automerge
+    if(Object.keys(groupChange).length > 0){
+        // if we are storing a single param change, do a paramUpdate
+        if(groupChange.values.length === 1){
+            // Update in Automerge
+            currentBranch = applyChange(currentBranch, (currentBranch) => {
+                // update DSP
+                currentBranch.synth.graph.modules[groupChange.parentNode].params[groupChange.paramLabel] = groupChange.values[0];
+                audioGraphDirty = true;
+                // set the changeNode
+                currentBranch.changeType = {
+                    msg: 'paramUpdate',
+                    param: groupChange.paramLabel,
+                    parent: groupChange.parentNode,
+                    value: groupChange.values
+                }
+            }, onChange, `paramUpdate ${groupChange.paramLabel} = ${groupChange.values[0]}$PARENT ${groupChange.parentNode}`);
+
+        } else if(groupChange.values.length > 1){
+            // are storing a gesture
+            // Update in Automerge
+            currentBranch = applyChange(currentBranch, (currentBranch) => {
+                currentBranch.synth.graph.modules[groupChange.parentNode].params[groupChange.paramLabel] = groupChange.values;
+                audioGraphDirty = true;
+                // set the change type
+                currentBranch.changeType = {
+                    msg: 'gesture',
+                    param: groupChange.paramLabel,
+                    parent: groupChange.parentNode,
+                    values: groupChange.values,
+                    timestamps: groupChange.timestamps
+                }
+            }, onChange, `gesture ${groupChange.paramLabel}$PARENT ${groupChange.parentNode}`);
+
+        }
+
+        // clear the groupChange
+        groupChange = { }
+    }
+
+    // ... rest of code omitted for brevity
+});
+
+\end{lstlisting}
+
+
+
+\section{applyChange}
+
+\begin{lstlisting}[language=JavaScript, caption={applyChange() manages Automerge document updates within Forking Paths. If the user is working on the current branch, the function applies changes directly and appends a new commit to that branch’s history. If the user is editing a past state (i.e., newClone is true), the function forks a new branch, applies the change, and updates the patch history metadata accordingly. In both cases, the current Automerge document is saved, a new hash is generated, and the onChangeCallback is triggered to sync peers, update the UI, and redraw the version history graph.}, label={lst:applyChange}]
+// handle document changes and call a callback
+function applyChange(doc, changeCallback, onChangeCallback, changeMessage) {
+    // in this condition, we are applying a change on the current branch
+    if(automergeDocuments.newClone === false ){
+        let amMsg = makeChangeMessage(patchHistory.head.branch, changeMessage)
+        // we are working from a head
+
+        // grab the current hash before making the new change:
+        previousHash = patchHistory.head.hash
+        
+        // Apply the change using Automerge.change
+        currentBranch = Automerge.change(currentBranch, amMsg, changeCallback);
+
+
+        // If there was a change, call the onChangeCallback
+        if (currentBranch !== doc && typeof onChangeCallback === 'function') {
+            let hash = Automerge.getHeads(currentBranch)[0]
+            
+            patchHistory = Automerge.change(patchHistory, (patchHistory) => {
+
+                // if the current patchHistory was loaded from the database, then we need to create a fork for this new change
+                if (patchHistory.hasBeenModified === false) {
+                    patchHistory.forked_from_id = patchHistory.databaseID
+                    patchHistory.hasBeenModified = true
+                    forkHistoryInDatabase(patchHistory.databaseID)
+                }
+                // Initialize the branch patchHistorydata if it doesn't already exist
+                if (!patchHistory.branches[patchHistory.head.branch]) {
+                    patchHistory.branches[patchHistory.head.branch] = { head: null, history: [] };
+                }
+                // Update the head property
+                patchHistory.branches[patchHistory.head.branch].head = hash;
+
+                // Push the new history entry into the existing array
+                patchHistory.branches[patchHistory.head.branch].history.push({
+                    hash: hash,
+                    parent: previousHash,
+                    msg: changeMessage,
+                    timeStamp: new Date().getTime()
+
+                });
+
+                // encode the doc as a binary object for efficiency
+                patchHistory.docs[patchHistory.head.branch] = Automerge.save(currentBranch)
+                // store the HEAD info
+                patchHistory.head.hash = hash
+                patchHistory.timeStamp = new Date().getTime()
+                //? patchHistory.head.branch = currentBranch.title
+                
+            });
+
+
+            
+            updatePatchHistoryDatabase()
+
+            onChangeCallback(currentBranch);
+        }
+        return currentBranch;
+    } else {
+        // player has made changes to an earlier version, so create a branch and set currentBranch to new clone
+
+        // store previous currentBranch in automergeDocuments, and its property is the hash of its head
+        automergeDocuments.otherDocs[patchHistory.head.branch] = currentBranch
+        // set currentBranch to current cloned doc
+        currentBranch = Automerge.clone(automergeDocuments.current.doc)
+
+        // create a new branch name
+        const newBranchName = uuidv7();
+        // use the new branch title
+        let amMsg = makeChangeMessage(patchHistory.head.branch, changeMessage)
+
+        // grab the current hash before making the new change:
+        previousHash = Automerge.getHeads(currentBranch)[0]
+        
+        // Apply the change using Automerge.change
+        currentBranch = Automerge.change(currentBranch, amMsg, changeCallback);
+        let hash = Automerge.getHeads(currentBranch)[0]
+        
+        // If there was a change, call the onChangeCallback
+        if (currentBranch !== doc && typeof onChangeCallback === 'function') {   
+            const timestamp = new Date().getTime()
+            patchHistory = Automerge.change(patchHistory, (patchHistory) => {
+
+                // create the branch
+                patchHistory.branches[newBranchName] = {
+                    head: hash,
+                    parent: previousHash,
+                    history: [{
+                        hash: hash,
+                        msg: changeMessage,
+                        parent: previousHash,
+                        timeStamp: timestamp
+                    }]
+                }
+
+                // store current doc
+                patchHistory.docs[newBranchName] = Automerge.save(currentBranch)
+                
+                // store the HEAD info
+                patchHistory.head.hash = hash
+                patchHistory.head.branch = newBranchName
+
+                patchHistory.timeStamp = timestamp
+
+                // store the branch name so that we can ensure its ordering later on
+                patchHistory.branchOrder.push(newBranchName)
+
+                // if the current patchHistory was loaded from the database, then we need to create a fork for this new change
+                if (patchHistory.hasBeenModified === false) {
+                    patchHistory.forked_from_id = patchHistory.databaseID
+                    patchHistory.hasBeenModified = true
+                    forkHistoryInDatabase(patchHistory.databaseID)
+                }
+            });
+           
+            // makeBranch(changeMessage, Automerge.getHeads(newDoc)[0])
+            onChangeCallback(currentBranch);
+
+            updatePatchHistoryDatabase()
+            automergeDocuments.newClone = false
+
+        }
+        return currentBranch;
+
+    }
+    
+
+}
+
+    // define the onChange Callback
+    onChange = () => {
+        // send to peer(s)
+        sendSyncMessage()
+        // set docUpdated so that indexedDB will save it
+        docUpdated = true
+        // update the historyGraph in the server
+        reDrawHistoryGraph()
+        // set audioDirty flag
+        if(audioGraphDirty){
+            audioGraphDirty = false
+    }
+};
+
+\end{lstlisting}
+
+\section{loadVersion()}
+
+\begin{lstlisting}[language=JavaScript, caption={The loadVersion() function loads a specific changeNode from the patch history when a player selects it in the DAG, restoring the associated synth configuration and patch history sequencer state using the provided branch name and hash.}, label={lst:loadVersion-function}]
+// Load a version from the DAG
+async function loadVersion(targetHash, branch, fromPeer, fromPeerSequencer) {
+    // get the head from this branch
+    let head = patchHistory.branches[branch].head
+    // get the automerge doc associated with the requested hash
+    let requestedDoc = loadAutomergeDoc(branch)
+    // Use `Automerge.view()` to view the state at this specific point in history
+    const historicalView = Automerge.view(requestedDoc, [targetHash]);
+    // load the pen tool drawing
+    if(historicalView.drawing){
+        loadCanvasVersion(historicalView.drawing)
+    }
+    
+    // Check if we're on the head; reset clone if true (so we don't trigger opening a new branch with changes made to head)
+    // compare the point in history we want (targetHash) against the head of its associated branch (head)
+    if (head === targetHash){
+
+        // no need to create a new branch if the user makes changes after this operation
+        automergeDocuments.newClone = false
+        // send the synth graph from this point in the history to the DSP worklet first
+        updateSynthWorklet('loadVersion', historicalView.synth.graph)
+        // send the visual graph from this point in the history to the synth cytoscape
+        updateCytoscapeFromDocument(historicalView);
+        // update patchHistory to set the current head and change hash
+        patchHistory = Automerge.change(patchHistory, (patchHistory) => {
+            // store the HEAD info (the most recent HEAD and branch that were viewed or operated on)
+            patchHistory.head.hash = targetHash
+            patchHistory.head.branch = branch
+        });
+        // set global var for easy checking
+        automergeDocuments.current = {
+            doc: requestedDoc
+        }        
+    } 
+    // this is necessary for loading a hash on another branch that ISN'T the head
+    else if (branch != patchHistory.head.branch) {
+
+        // if we are dealing with a blank patch, then clear the audio graph
+        if(!historicalView.synth){
+            updateSynthWorklet('clearGraph')
+        } else {
+            // send the synth graph from this point in the history to the DSP worklet first
+            updateSynthWorklet('loadVersion', historicalView.synth.graph, null, historicalView.changeType)
+        }
+
+        // send the visual graph from this point in the history to the synth cytoscape
+        updateCytoscapeFromDocument(historicalView);
+        // set global var for easy checking
+        automergeDocuments.current = {
+            doc: requestedDoc
+        }
+        // update patchHistory to set the current head and change hash
+        patchHistory = Automerge.change(patchHistory, (patchHistory) => {
+            // store the HEAD info (the most recent HEAD and branch that were viewed or operated on)
+            patchHistory.head.hash = targetHash
+            patchHistory.head.branch = branch
+        });
+        // set newClone to true
+        automergeDocuments.newClone = true
+    }
+    // the selected hash belongs to the current branch
+    else {
+        // send the synth graph from this point in the history to the DSP worklet first
+        updateSynthWorklet('loadVersion', historicalView.synth.graph, null, historicalView.changeType)
+        // send the visual graph from this point in the history to the synth cytoscape
+        updateCytoscapeFromDocument(historicalView);
+        // create a clone of the branch in case the player begins making changes
+        let clonedDoc = Automerge.clone(historicalView)
+        // store it
+        automergeDocuments.current = {
+            doc: clonedDoc
+        }
+        // set newClone to true
+        automergeDocuments.newClone = true
+
+        // update patchHistory to set the current head and change hash
+        patchHistory = Automerge.change(patchHistory, (patchHistory) => {
+            // store the HEAD info (the most recent HEAD and branch that were viewed or operated on)
+            patchHistory.head.hash = targetHash
+            patchHistory.head.branch = branch
+        });
+    }
+
+    // Optional sync/permission handling AFTER local load
+    const recallMode = getVersionRecallMode();
+    // ensure that loadVersion calls from the peer don't make past this point, becuase otherwise they'd send it back and forth forever 
+    if (recallMode === 'openLoadVersion' && !fromPeer && !fromPeerSequencer) {
+        console.log('openVersionRecall')
+        openVersionRecall(targetHash, branch);
+    }
+
+    if (recallMode === 'requestOpenLoadVersion'  && !fromPeer) {
+        // requestVersionRecallWithPermission(currentBranch, Automerge.getHeads(currentBranch)[0], patchHistory.head.branch);
+        console.warn('not set up yet')
+    }
+
+} 
+\end{lstlisting}
+
+
+\section{updateSynthWorklet()}
+
+\begin{lstlisting}[language=JavaScript, caption={Sends commands from the UI to the synthWorklet audio engine via the Web Audio API’s message port. Supports graph updates (e.g., adding/removing nodes or cables), parameter changes, and signal analysis configuration. Commands are structured and dispatched using a switch statement.}, label={lst:updateSynthWorklet-function}]
+function updateSynthWorklet(cmd, data, structure, changeNode){
+
+    switch (cmd) {
+        case 'setOutputVolume':
+            synthWorklet.port.postMessage({ 
+                cmd: 'setOutputVolume',
+                data: data
+            });
+        break
+        case 'clearGraph':
+            synthWorklet.port.postMessage({ 
+                cmd: 'clearGraph'
+            });
+        break
+        case 'loadVersion':
+            synthWorklet.port.postMessage({ 
+                cmd: 'loadVersion', 
+                data: data,
+            });
+        break
+
+        case 'setSignalAnalysis':
+            synthWorklet.port.postMessage({ 
+                cmd: 'setSignalAnalysis', 
+                data: data
+            });
+        break
+        
+        case 'addNode':
+            synthWorklet.port.postMessage({ 
+                cmd: 'addNode', 
+                data: data,
+                structure: structure
+            });
+        break
+
+        case 'removeNode':
+            synthWorklet.port.postMessage({ 
+                cmd: 'removeNode', 
+                data: data
+            });
+        break
+
+        case 'addCable':
+            synthWorklet.port.postMessage({
+                cmd: 'addCable',
+                data: data
+            });
+
+        break
+
+        case 'removeCable':
+            synthWorklet.port.postMessage({
+                cmd: 'removeCable',
+                data: data
+            });
+        break
+
+        case 'paramChange':
+
+            synthWorklet.port.postMessage({ cmd: 'paramChange', data: data });
+        break
+    }
+
+}
+\end{lstlisting}
+
+\section{updateCytoscapeFromDocument()}
+
+\begin{lstlisting}[language=JavaScript, caption={The updateCytoscapeFromDocument() function rebuilds the visual patch graph in Cytoscape.js based on a loaded changeNode document. It supports three modes: buildUI is triggered after loading a .fpsynth synthesizer file and fully reconstructs the interface, including parameter overlays. The default mode responds to changes or version loads initiated by the local player, while buildFromSyncMessage applies state changes received from a remote peer. Since rebuilding UI overlays involves additional computation, the latter two modes skip this step unless overlays are missing and must be regenerated.}, label={lst:updateCytoscapeFromDocument}]
+// Function to update Cytoscape with the state from the loaded changeNode doc (referred to here as 'forkedDoc')
+function updateCytoscapeFromDocument(forkedDoc, cmd, lastGestureValue) {
+    App.synth.visual.modules = forkedDoc.synth.graph.modules
+    let elements = forkedDoc.elements
+    peers.remote = {}
+    // only rebuild the UI if needed
+    if(cmd === 'buildUI'){
+        parentNodePositions = []; // Array to store positions of all parent nodes
+
+        // Step 1: Extract all parent nodes from the given document
+        const parentNodes = forkedDoc.elements.filter(el => el.classes === ':parent'); // Adjust based on your schema
+        parentNodes.forEach(parentNode => {
+            if (parentNode.position) {
+                parentNodePositions.push({
+                    id: parentNode.data.id,
+                    position: parentNode.position
+                });
+            }
+        })
+        
+        // Clear existing elements from Cytoscape instance
+        synthGraphCytoscape.elements().remove();
+
+        // remove all dynamicly generated UI overlays (knobs, umenus, etc)
+        removeUIOverlay('allNodes')
+        
+        // ensure their container divs are removed too
+        clearparamContainerDivs()
+
+        // I do this from the synthFile because the parentNodes' dimensions respond to their childs' positioning
+        synthGraphCytoscape.json(patchHistory.synthFile)
+        // synthGraphCytoscape.nodes(':parent').forEach(n => console.log(n.id())); // lock all parent nodes so they can't be dragged
+        // Sync the positions in `elements`
+        const syncedElements = syncPositions(forkedDoc);
+        // add all cables back in with a check to make sure we don't render edges to empty parent nodes
+        for (let i = 0; i < syncedElements.length; i++) {
+            const el = syncedElements[i];
+            if (el.type === 'edge') {
+                const sourceExists = synthGraphCytoscape.getElementById(el.data.source).length > 0;
+                const targetExists = synthGraphCytoscape.getElementById(el.data.target).length > 0;
+
+                if (!sourceExists || !targetExists) {
+                    console.warn(`Skipping edge: ${el.data.id} due to missing source or target`);
+                    continue; // Skip this iteration and move to the next element
+                }
+            }
+
+            synthGraphCytoscape.add(el);
+        }
+        
+        let index = 0
+        elements.forEach((node)=>{
+            // set module grabbable to false -- prevents module movements in main view
+            if(node.classes === ':parent'){
+                // lock the module's position
+                synthGraphCytoscape.getElementById(node.data.id).lock();
+            }
+            if(node.classes === 'paramAnchorNode'){
+                let value = App.synth.visual.modules[node.data.parent].params[node.data.label]
+                createFloatingOverlay(node.data.parent, node, index, value)
+                index++
+            }
+        })
+        // Initial position and scale update. delay it to wait for cytoscape rendering to complete. 
+        setTimeout(() => {
+            updateKnobPositionAndScale('all');
+        }, 10); // Wait for the current rendering cycle to complete
+        
+        // After loading your synth and creating overlays:
+        cacheVisibleParamControls(App.synth.visual.modules);
+        
+    } else if (cmd === 'buildFromSyncMessage'){
+        // Sync the positions in `elements`
+        const syncedElements = syncPositions(forkedDoc);
+        // clear 
+        synthGraphCytoscape.elements().remove();
+
+        // 3. Add new elements to Cytoscape
+        synthGraphCytoscape.add(syncedElements)
+
+        // check to see if none of the overlays were made. this is the case if peer has a blank document and is syncing to another peer's doc
+        const overlaysExist = document.querySelector('[id^="paramControl_parent:"]') !== null;
+
+        if (!overlaysExist) {
+            updateCytoscapeFromDocument(forkedDoc, 'buildUI');
+            return; // skip the rest, since buildUI handles everything
+        }
+
+        refreshParamControls(App.synth.visual.modules, lastGestureValue);
+    }
+    
+    
+    else {
+        // Sync the positions in `elements`
+        const syncedElements = syncPositions(forkedDoc);
+        // clear 
+        synthGraphCytoscape.elements().remove();
+
+        // 3. Add new elements to Cytoscape
+        synthGraphCytoscape.add(syncedElements)
+
+        refreshParamControls(App.synth.visual.modules);
+    }
+}   
+
+\end{lstlisting}
+
+
+
+
+
+\section{createMerge()}
+
+\begin{lstlisting}[language=JavaScript, caption={The createMerge function takes two changeNodes selected by the player and merges them. A new branch is created to store the result of the merge. The unified patch state is then loaded into the main application and rendered in the visual and audio synth graphs.}, label={lst:createMerge-function}]
+// merge 2 versions & create a new node in the history graph
+function createMerge(nodes){
+    let doc1 = nodes[0]
+    let doc2 = nodes[1]
+
+    // load historical views of both docs
+    let requestedDoc1 = loadAutomergeDoc(doc1.branch)
+    let requestedDoc2 = loadAutomergeDoc(doc2.branch)
+    // merge them
+    let mergedDoc = Automerge.merge(requestedDoc1, requestedDoc2)
+    let hashes = [ doc1.id, doc2.id ]
+
+    // create empty change to 'flatten' the merged Doc
+    currentBranch = Automerge.emptyChange(mergedDoc);
+
+    let hash = Automerge.getHeads(currentBranch)[0]
+    // make new branch name
+    const newBranchName = uuidv7()
+    // update the patchHistory in Automerge
+    patchHistory = Automerge.change(patchHistory, { message: `merge parents: ${doc1.id} ${doc2.id} `}, (patchHistory) => {
+        // Initialize the branch patchHistorydata if it doesn't already exist
+        if (!patchHistory.branches[newBranchName]) {
+            patchHistory.branches[newBranchName] = { 
+                head: null, 
+                parent: [ doc1.id, doc2.id ], 
+                history: [] 
+            };           
+        }
+        // Update the head property
+        patchHistory.branches[newBranchName].head = hash;
+        // Push the new history entry into the existing array
+        patchHistory.branches[newBranchName].history.push({
+            hash: hash,
+            msg: 'merge',
+            parent: hashes,
+            nodes: [doc1, doc2]
+        });
+        // store current doc
+        patchHistory.docs[newBranchName] = Automerge.save(currentBranch)        
+        // store the HEAD info
+        patchHistory.head.hash = hash
+        patchHistory.head.branch = newBranchName
+        // store the branch name so that we can ensure its ordering later on
+        patchHistory.branchOrder.push(newBranchName)
+    });
+    // set docUpdated so that indexedDB will save it
+    docUpdated = true
+    // update the audio graph
+    updateSynthWorklet('loadVersion', currentBranch.synth.graph)
+    // update the synth graph (visual)
+    updateCytoscapeFromDocument(currentBranch, 'buildUI');
+    // update the historyGraph
+    reDrawHistoryGraph()
+}
+\end{lstlisting}
+
+\section{startCable()}
+\begin{lstlisting}[language=JavaScript, caption={Function startCable() creates a temporary visual connection between a source node and the mouse position. A ghost node and dashed cable are rendered to indicate an in-progress patching action.}, label={lst:startCable-function}]
+function startCable(source, position){
+    temporaryCables.local.source = source;
+    const mousePos = position;
+
+    // Get the ghostCable property from the temporaryCables.local.ghostNode, default to 'ellipse' if undefined
+    const ghostShape =  temporaryCables.local.source.data('ghostCableShape') || 'ellipse';
+    const ghostColour =  temporaryCables.local.source.data('ghostCableColour') || '#5C9AE3';
+
+    // Create a ghost node at the mouse position to act as the moving endpoint
+    temporaryCables.local.ghostNode = synthGraphCytoscape.add({
+        group: 'nodes',
+        data: { id: 'localGhostNode' },
+        position: mousePos,
+        grabbable: false, // Ghost node shouldn't be draggable
+        classes: 'ghostNode'
+    });
+
+    // Apply the ghostShape to the ghostNode using a direct style override
+    temporaryCables.local.ghostNode.style({
+        'shape': ghostShape,
+        'background-color': ghostColour
+    });
+    // Create a temporary edge from ghostNodes.local.source to temporaryCables.local.ghostNode
+    temporaryCables.local.tempEdge = synthGraphCytoscape.add({
+        group: 'edges',
+        data: { id: 'localTempEdge', source: temporaryCables.local.source.id(), target: 'localGhostNode' },
+        classes: 'tempEdge'
+    });
+
+    // Set target endpoint to mouse position initially
+    temporaryCables.local.tempEdge.style({ 'line-color': '#FFA500', 'line-style': 'dashed',  'source-arrow-shape': 'none'  }); // Set temporary edge color        
+}
+\end{lstlisting}
+
+\section{handleRemoteCables()}
+\begin{lstlisting}[language=JavaScript, caption={Handles the rendering of temporary cables created by a remote peer, updating their position in real time. These updates are transmitted over a WebRTC data channel and are intentionally kept outside the Automerge sync protocol to avoid polluting the version history.}, label={lst:handleRemoteCables-function}]
+function handleRemoteCables(cmd,  peerID, sourceID, position){   
+    switch(cmd){    
+        case 'startRemoteGhostCable':
+            let ghostId = `ghostNode-${peerID}`
+            let tempEdgeID = `tempEdge-${peerID}`
+            
+            temporaryCables.peers[peerID] = {
+                source: synthGraphCytoscape.getElementById(sourceID),
+                // Create a ghost node at the mouse position to act as the moving endpoint
+                ghostNode: synthGraphCytoscape.add({
+                    group: 'nodes',
+                    data: { id: ghostId },
+                    position: position,
+                    grabbable: false, // Ghost node shouldn't be draggable
+                    classes: 'ghostNode'
+                }),
+                // Create a temporary edge from temporaryCables.local.source to ghostNode
+                tempEdge: synthGraphCytoscape.add({
+                    group: 'edges',
+                    data: { id: tempEdgeID, source: sourceID, target: ghostId },
+                    classes: 'tempEdge'
+                }),
+                targetNode: null
+            }
+            
+            // set ghostNode Style according to opposite of source Node
+            const ghostShape = temporaryCables.peers[peerID].source.data('ghostCableShape') || 'ellipse';
+            const ghostColour = temporaryCables.peers[peerID].source.data('ghostCableColour') || '#5C9AE3';
+            temporaryCables.peers[peerID].ghostNode.style({
+                'shape': ghostShape,
+                'background-color': ghostColour
+            });
+
+            temporaryCables.peers[peerID].tempEdge.style({ 'line-color': '#228B22', 'line-style': 'dashed', 'source-arrow-shape': 'none' }); // Set peer temporary edge color
+        break;
+
+        case 'updateRemoteGhostCable':
+            // update the tmporary cable's position
+            temporaryCables.peers[peerID].ghostNode.position(position)
+        break
+
+        case 'finishRemoteGhostCable':
+            // remove the tempEdge
+            synthGraphCytoscape.remove(temporaryCables.peers[peerID].tempEdge)
+            // remove remote ghostnode
+            synthGraphCytoscape.remove(temporaryCables.peers[peerID].ghostNode);
+            synthGraphCytoscape.nodes().removeClass('highlighted');
+
+            // remove remote peer's temporary cable from object
+            delete temporaryCables.peers[peerID]
+
+        break;
+    }
+} 
+
+\end{lstlisting}
+
+\section{isEdgeInCycle()}
+
+\begin{lstlisting}[language=JavaScript, caption={Determines whether a given cable (edge) introduces a cycle in the patch graph rendered by Cytoscape. The function checks for both self-loop cycles and inter-node cycles using depth-first search (DFS). If a cycle is detected, it inserts a feedbackDelayNode with a fixed delay of 128 samples into the audio graph to allow feedback patching.}, label={lst:isEdgeInCycle-function}]
+function isEdgeInCycle(edgeToCheck) {
+    const parentEdges = new Map();
+    const selfLoopEdges = []; // Store self-loop edges for same parent connections
+
+    // Step 1: Build a directed graph of parent nodes with child information
+    synthGraphCytoscape.edges().forEach((edge) => {
+        const sourceParent = edge.data().source.split('.')[0]; // Parent of the source node
+        const targetParent = edge.data().target.split('.')[0]; // Parent of the target node
+        const sourceChild = edge.data().source.split('.')[1]; // Source child
+        const targetChild = edge.data().target.split('.')[1]; // Target child
+
+        if (targetParent.includes('AudioDestination')) {
+            return; // Ignore connections to the audio destination
+        }
+
+        if (sourceParent === targetParent) {
+            // Detect self-loop: connections within the same parent node
+            selfLoopEdges.push({
+                sourceParent,
+                targetParent,
+                sourceChild,
+                targetChild,
+            });
+        } else {
+            // Add normal inter-parent edges
+            if (!parentEdges.has(sourceParent)) {
+                parentEdges.set(sourceParent, []);
+            }
+            parentEdges.get(sourceParent).push({
+                targetParent,
+                sourceChild,
+                targetChild,
+            });
+        }
+    });
+
+    // Step 2: Detect self-loop cycles
+    const selfLoopMatch = selfLoopEdges.some(
+        (edge) =>
+            edge.sourceParent === edgeToCheck.data().source.split('.')[0] &&
+            edge.targetParent === edgeToCheck.data().target.split('.')[0] &&
+            edge.sourceChild === edgeToCheck.data().source.split('.')[1] &&
+            edge.targetChild === edgeToCheck.data().target.split('.')[1]
+    );
+
+    if (selfLoopMatch) {
+        // console.log(
+        //     `Edge ${edgeToCheck.id()} forms a self-loop cycle within ${edgeToCheck.data().source.split('.')[0]}`
+        // );
+        return true;
+    }
+
+    // Step 3: Detect inter-parent cycles using Depth-First Search (DFS)
+    const visited = new Set();
+    const recStack = new Set();
+    let edgeInCycle = false;
+
+    function dfs(node, path = [], edgePath = []) {
+        if (!visited.has(node)) {
+            visited.add(node); // Mark the node as visited
+            recStack.add(node); // Add the node to the recursion stack
+
+            const neighbors = parentEdges.get(node) || [];
+            for (const neighbor of neighbors) {
+                const currentEdge = {
+                    sourceParent: node,
+                    targetParent: neighbor.targetParent,
+                    sourceChild: neighbor.sourceChild,
+                    targetChild: neighbor.targetChild,
+                };
+
+                if (!visited.has(neighbor.targetParent)) {
+                    if (
+                        dfs(
+                            neighbor.targetParent,
+                            [...path, node],
+                            [...edgePath, currentEdge]
+                        )
+                    ) {
+                        return true; // Cycle detected
+                    }
+                } else if (recStack.has(neighbor.targetParent)) {
+                    // Cycle detected: back edge
+                    const cycleStartIndex = path.indexOf(neighbor.targetParent);
+                    const cycleEdges = [
+                        ...edgePath.slice(cycleStartIndex),
+                        currentEdge,
+                    ]; // Edges in the cycle
+
+                    // Check if the edgeToCheck belongs to this cycle
+                    if (
+                        cycleEdges.some(
+                            (edge) =>
+                                edge.sourceParent ===
+                                    edgeToCheck.data().source.split('.')[0] &&
+                                edge.targetParent ===
+                                    edgeToCheck.data().target.split('.')[0] &&
+                                edge.sourceChild ===
+                                    edgeToCheck.data().source.split('.')[1] &&
+                                edge.targetChild ===
+                                    edgeToCheck.data().target.split('.')[1]
+                        )
+                    ) {
+                        edgeInCycle = true;
+                        return true;
+                    }
+                }
+            }
+        }
+
+        recStack.delete(node);
+        return false;
+    }
+
+    for (const node of parentEdges.keys()) {
+        if (!visited.has(node)) {
+            dfs(node);
+            if (edgeInCycle) break; // Exit early if the edge is found in a cycle
+        }
+    }
+
+    return edgeInCycle; // Return true if the edge belongs to any cycle
+}
+
+
+\end{lstlisting}
+
+
+
+
+
+
+\bigskip
+\textbf{Complete File} — The full, commented source is archived at
+\\https://github.com/michaelpalumbo/forkingpaths/blob/dissertationJune/src/scripts\\/synthApp.js

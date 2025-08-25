@@ -1,0 +1,472 @@
+%   DOCUMENT CLASS  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%   Use the `yorkudiss` class to format your thesis.
+%
+% Template created by Michael Palumbo 2025, based on an outline provided by SFU. Please refer to https://www.yorku.ca/gradstudies/students/current-students/thesis-and-dissertation/doctoral-dissertation/ for the latest guidelines on formatting and matter to include. 
+
+
+\documentclass[12pt]{yorkudiss}
+
+
+
+%   DOCUMENT METADATA  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%   Fill in the following information for the title page and declaration of
+%   committee page. 
+
+%   Choose the \faculty entry below from the following list:
+%
+%       - Faculty of Applied Sciences
+%       - Faculty of Arts and Social Sciences
+%       - Beedie School of Business
+%       - Faculty of Communication, Art and Technology
+%       - Faculty of Education
+%       - Faculty of Environment
+%       - Faculty of Health Sciences
+%       - Faculty of Science
+
+\title{Name of Thesis: Subtitle of thesis}
+\thesistype{Dissertation}
+\author{Firstname Lastname}
+\previousdegrees{%
+    M.A., York University, 2016\\
+    B.F.A., Concordia University, 2014}
+\degree{Doctor of Philosophy}
+\department{Department of Digital Media}
+\faculty{School of Arts, Media, Performance, and Design}
+\copyrightyear{2025}
+\semester{Summer 2025}
+
+
+%   You may include up to six keywords or phrases. Keywords should be separated
+%   with semicolons. No punctuation at the end.
+\keywords{version control systems, digital musical instruments, modular synthesis, distributed creativity}
+
+\committee{
+    \chair{Michael Longford}{Graduate Program Director, Digital Media Program}
+    \member{Graham Wakefield}{Supervisor \\ Associate Professor, Digital Media Program}
+    \member{Joel Ong}{Committee Member \\ Associate Professor, Digital Media Program}
+    \member{Andreas Kitzmann}{Committee Member \\ Associate Professor, Department Of Humanities}
+    \member{Vassilios (Bil) Tzerpos}{Examiner \\ Associate Professor, Department of Electrical Engineering \& Computer Science, Lassonde School of Engineering}
+    \member{Sang Won Lee}{External Examiner \\ Associate Professor, Department of Computer Science, College of Engineering, Virginia Polytechnic Institute and State University}
+}
+
+
+
+%   PACKAGES %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%   Add any packages you need for your thesis here.
+%   You don't need to call the following packages, which are already called in
+%   the yorkudiss class file:
+%
+%   - appendix
+%   - etoolbox
+%   - fontenc
+%   - geometry
+%   - lmodern
+%   - nowidow
+%   - setspace
+%   - tocloft
+%
+%   If you call one of the above packages (or one of their dependencies) with
+%   options, you may get a "Option clash" LaTeX error. If you get this error,
+%   you can fix it by removing your copy of \usepackage and passing the options
+%   you need by adding
+%
+%       \PassOptionsToPackage{<options>}{<package>}
+%
+%   before \documentclass{yorkudiss}.
+%
+%   The following packages are a few suggestions you might find useful.
+%
+%   (1) amsmath and amssymb are essential if you have math in your thesis;
+%       they provide useful commands like ``blackboard bold'' symbols and
+%       environments for aligning equations.
+%   (2) amsthm includes allows you to easily change the style and numbering of
+%       theorems. It also provides an environment for proofs.
+%   (3) graphicx allows you to add images with \includegraphics{filename}.
+%   (4) hyperref turns your citations and cross-references into clickable
+%       links, and adds metadata to the compiled PDF.
+%   (5) pdfpages lets you import pages of external PDFs using the command
+%       \includepdf{filename}. You will need to do this if your research
+%       requires an Ethics Statement.
+\usepackage{etoolbox}
+
+\usepackage[backend=biber,style=authoryear]{biblatex}
+\addbibresource{references.bib} % use actual filename
+
+\usepackage{amsmath}                            % (1)
+\usepackage{amssymb}                            % (1)
+\usepackage{amsthm}                             % (2)
+\usepackage{graphicx}                           % (3)
+\usepackage[pdfborder={0 0 0}]{hyperref}        % (4)
+% \usepackage{pdfpages}                         % (5)
+% ...
+% ...
+% ...
+% ... add your own packages here!
+
+
+
+
+%   OTHER CUSTOMIZATIONS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%   Add any packages you need for your thesis here. We've started you off with
+%   a few suggestions.
+%
+%   (1) Use a single word space between sentences. If you disable this, you
+%       will have to manually control spacing around abbreviations.
+%   (2) Correct the capitalization of "Chapter" and "Section" if you use the
+%       \autoref macro from the `hyperref` package.
+%   (3) The LaTeX thesis template defaults to one-and-a-half line spacing. If
+%       your supervisor prefers double-spacing, you can redefine the
+%       \defaultspacing command.
+%
+
+\frenchspacing                                    % (1)
+\renewcommand*{\chapterautorefname}{Chapter}      % (2)
+\renewcommand*{\sectionautorefname}{Section}      % (2)
+\renewcommand*{\subsectionautorefname}{Section}   % (2)
+% \renewcommand{\defaultspacing}{\doublespacing}  % (3)
+% ...
+% ...
+% ...
+% ... add your own customizations here!
+
+
+
+
+%   FRONTMATTER  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%   Title page, committee page, abstract, dedication, acknowledgements, table
+%   of contents, etc.
+%
+
+\begin{document}
+
+\frontmatter
+\maketitle{}
+\makecommittee{}
+
+%% If your thesis requires an ethics statement, download that statement pdf from the York ERB site, include it in the list of files to the left, and then uncomment these lines:
+%\addtoToC{Ethics Statement}%
+%\includepdf[pagecommand={\thispagestyle{plain}}]{ethics_statement_piii.pdf}%
+%\clearpage
+
+\begin{abstract}
+
+This abstract demonstrates the structure and purpose of the section within a dissertation. It begins by identifying a research problem or question, followed by a brief account of the methods or approaches used to address it. Next, it summarizes the key findings or contributions of the work, highlighting the main outcomes. Finally, it concludes with a statement of significance, noting the broader implications of the research and its relevance to the field.
+
+The abstract should remain concise—typically between 150 and 300 words—and should not include citations, figures, or extensive detail. Its primary role is to provide readers with a clear and accessible overview of the project so that they can quickly understand its scope, methodology, and importance.
+
+\end{abstract}
+
+
+\begin{dedication}
+I dedicate this dissertation to a person that I know, probably. 
+\end{dedication}
+
+
+\begin{acknowledgements}
+These are some other folks that I know, and think are pretty cool. 
+
+\end{acknowledgements}
+
+\begin{preface}
+
+This dissertation is submitted as a complex digital thesis consisting of a written manuscript accompanied by a curated archive of digital artefacts. Depending on the nature of the research, these may include runnable software, websites, source-code snapshots, build artefacts, media files, or screen-captures that document earlier experiments. Taken together, such collections can represent the evolution of a research inquiry and provide evidence of both successful outcomes and instructive dead ends.
+
+In many cases, a dissertation will have a principal case study or final artefact that anchors the work. Earlier prototypes, legacy projects, or exploratory experiments may also be included in the archive, even if they are no longer runnable. These items remain valuable because they illustrate conceptual steps, design decisions, and technical challenges that shaped the trajectory of the research. Where projects depend on now-defunct systems, it is sufficient to preserve them as read-only repositories or screenshots for reference.
+
+The written manuscript typically performs several complementary roles:
+
+\begin{itemize}
+    \item \textbf{Contextualisation} — Early chapters situate the research within relevant scholarly and creative domains. 
+  
+    \item \textbf{Documentation} — Subsequent chapters trace the development process, outlining prototypes, iterations, and final systems.
+
+    \item \textbf{Evaluation} — Analysis chapters provide evidence of testing, case studies, or public engagements, synthesizing the project’s contributions.
+
+    \item \textbf{Conclusion} — The final chapter distills contributions, acknowledges limitations, and proposes future directions.
+\end{itemize}
+
+If the dissertation cites code, media, or design artefacts, an inventory should be provided to specify each digital component, note whether it is runnable or archival, and cross-reference the relevant manuscript chapters. Where possible, readers are encouraged to engage with live or interactive items before (or alongside) the corresponding discussion, as firsthand interaction often makes technical or design arguments more tangible.
+
+\begin{table}[h]
+  \centering
+  \caption{Digital \& Multimodal Components}
+  \begin{tabular}{@{}p{2.5cm}p{7cm}p{4cm}@{}}
+    \toprule
+    Label & Location / Access & Description \\ \midrule
+    Digital Item A & 
+      \begin{minipage}[t]{\linewidth}%
+        [Insert URL or repository link here]
+      \end{minipage} &
+    Primary artefact or case study (e.g., runnable system or interactive website). \\
+    Digital Item B & 
+      [Insert repository, media archive, or file location] &
+      Secondary or legacy artefacts, preserved for reference. These may include read-only code repositories, screenshots, or datasets. \\ \bottomrule
+  \end{tabular}
+\end{table}
+
+\end{preface}
+
+\clearpage
+
+\addtoToC{Table of Contents}%
+\tableofcontents%
+\clearpage
+
+%   This is an optional page. Remove the following lines if you don't have any tables.
+\addtoToC{List of Tables}%
+\listoftables%
+\clearpage
+
+%   This is an optional page. Remove the following lines if you don't have any figures.
+\addtoToC{List of Figures}%
+\listoffigures%
+\clearpage
+
+
+
+
+
+%   MAIN MATTER  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%   Start writing your thesis --- or start \include ing chapters --- here.
+%
+
+\mainmatter%
+
+\chapter{Introduction}
+
+The introduction of a dissertation typically begins by identifying an existing gap or challenge in the relevant field. This can be a problem of practice, theory, technology, or understanding that motivates the research. The goal at this stage is to clearly articulate why the problem matters and how it connects to broader scholarly or creative contexts. Authors often highlight what is missing in existing tools, theories, or approaches, and why these limitations are significant.
+
+Having established the gap, the introduction usually outlines the motivation for addressing it. This may include observations about current practice, cultural or disciplinary needs, or opportunities created by new methods or technologies. It is important to connect the motivation to both the practical and scholarly value of the work, ensuring that readers understand the stakes of the research.
+
+The introduction should then present the central proposal or hypothesis of the dissertation. This is the place to briefly describe the system, study, or approach that responds to the identified gap. While details will come later, a concise explanation of the main idea helps readers anticipate the argument and contributions to follow. Depending on the field, this might involve describing a prototype, a theoretical framework, or a methodological intervention.\footnote{For example, a dissertation in engineering may highlight a technical system, while one in the humanities may foreground an interpretive framework.}
+
+Next, the introduction often summarizes the methodological approach, noting how the research was conducted. This may include iterative design, case studies, experiments, or research-creation methods, depending on the discipline. A brief overview of how the inquiry unfolded helps contextualize the results without overwhelming the reader with detail.\footnote{It is common to mention specific prototypes, phases of study, or stages of analysis, but leave full documentation to the methodology chapter.}
+
+Finally, the introduction usually provides a roadmap for the remainder of the dissertation. This involves a short summary of each chapter, allowing the reader to see how the document is structured and how the argument will develop. The roadmap should be concise and written in plain language so that the overall trajectory of the dissertation is easy to follow.
+
+In sum, the introduction serves to orient the reader: it establishes the problem, explains the motivation, introduces the proposed contribution, outlines the methodological approach, and previews the structure of the dissertation.
+
+
+
+\chapter{Literature Review}
+
+The following section is drawn directly from Michael Palumbo’s dissertation and is included here purely as an example. It demonstrates how to structure a literature review and, most importantly, how to use LaTeX citations with the \texttt{biblatex} package. Notice the use of both \verb|\parencite{}| (for parenthetical citations) and \verb|\textcite{}| (for in-text citations). When compiled with a corresponding \texttt{.bib} file, these commands will automatically generate formatted references according to the chosen citation style.
+
+The literature review typically surveys and synthesizes key bodies of work relevant to the dissertation. It introduces thematic areas, explains why they are significant, and situates the author’s own research within these conversations. While the exact organization will vary by project, the goal is always to demonstrate familiarity with the field and to build a conceptual foundation for the new contribution.
+
+--- (start of excerpt:)
+
+The literature review addresses thematic areas central to this dissertation, including: distributed creativity, web-based audio and visual tools, networked creativity, VCS and state management systems, collaborative performance practices with modular synthesizers, software-based and mixed-reality musical instruments (VRMIs and MRMIs), visual programming languages, live-coding, improvisation practices, and theories related to instrument design and collaborative creativity.
+
+\section{Distributed Creativity}
+Contemporary theories of human activity recognize that action does not arise solely from individuals, but from interactions between people, tools, and environments. The term sociomaterial refers to this entanglement of social and material elements in shaping what people do \parencite{orlikowski_10_2008}. It emphasizes that people, technologies, environments, and infrastructures do not act in isolation, but continually influence and constitute each other. Activity is understood as situated, which means that it is shaped by the specific social, spatial, temporal, and material conditions in which it takes place \parencite{lave_situated_1991, dourish_where_2004}. 
+
+Sociomaterialist thinking has been influenced by the theories of the extended mind \parencite{clark_extended_1998} and of distributed cognition \parencite{hutchins_cognition_2006}. The theory of the extended mind argues that mental activity does not reside solely within the brain, but is supported by tools and external representations—such as notebooks, maps, or software—which function as integral parts of an individual’s cognitive process. Distributed cognition emphasizes both the integration of tools into individual reasoning, and the interpersonal, environmental and systemic conditions in which the individual is situated. Hutchins provides an example of the navigation practices of naval crews and ships, to demonstrate how processes like reasoning, memory, and problem-solving emerge through the coordination of people, physical environments, representational media, and historical routines.
+
+Creativity, too, is always situated, scaffolded, and mediated, and emerges through an ecology of temporal, material, and relational processes. \textcite{glaveanu_distributed_2014} emphasizes the link between culture and creativity, proposing a distributed, systemic model in which creative outcomes emerge through dynamic interrelations between individuals, artifacts, norms, and institutions. This sociomaterial view of creativity treats it as extended, emerging from entanglements of human and nonhuman actors \parencite{suchman_human-machine_2007, ingold_making_2013}.
+
+\textcite{sawyer_distributed_2009} articulate the concept of distributed creativity to describe how creative outcomes emerge from networks of participants, practices, and artifacts—whether through co-present collaboration or asynchronous, artifact-mediated exchange. This perspective shifts attention away from individual authorship and toward what Sawyer and DeZutter call collaborative emergence: improvisatory and open-ended processes in which outcomes arise through mutual responsiveness rather than centralized control.
+
+--- (end of excerpt:)
+
+It is good practice to conclude the literature review by restating the main threads of the discussion and signaling how they prepare the ground for the next chapter. This transition helps the reader understand how the reviewed literature informs the methodology, case study, or design work that follows.
+
+
+\chapter{Methodology}
+
+\textit{Caveat: the following is just a suggestion -- go with with you and your supervisor have worked on! -- I also designed it as a way to demonstrate how the section and subsection and subsubsection}
+|
+The methodology chapter explains how the research was conducted. Its purpose is to give readers enough detail to understand the approach, evaluate its appropriateness, and, in principle, replicate or adapt the work.  
+
+\section{Research Design}
+This section outlines the overall strategy or framework guiding the inquiry (e.g., experimental study, ethnography, research-creation, case study).  
+
+\subsection{Rationale}
+Explain why this design was chosen and how it connects to the research questions or goals. 
+
+\subsubsection{lorem ipsum}
+Just to show you how \\subsubsection{} works and how it appears in the file outline to the left. 
+
+\section{Methods and Tools}
+Describe the specific techniques, instruments, or systems used to collect and analyze data. This might include software, equipment, surveys, or observational strategies.  
+
+\section{Procedures}
+Provide a step-by-step account of what was done. Depending on the field, this might include prototype development, experimental protocols, participant recruitment, or data processing workflows.  
+
+\section{Limitations}
+Acknowledge the constraints or boundaries of the chosen methods, and discuss how these may affect interpretation. Where relevant, suggest how future studies might overcome these limitations.  
+
+
+
+
+\chapter{Primary Creative Work / Case Study}
+
+In many dissertations—particularly those in research-creation or practice-based fields—it is common to dedicate a full chapter to the primary creative work or case study that anchors the project. This chapter usually provides a detailed account of the work itself: its conception, design, development, and role within the broader research.  
+
+Students might use this chapter to:  
+
+\begin{itemize}
+    \item Document a software application, artistic work, or system they created.  
+    \item Provide design rationale, technical details, and conceptual framing.  
+    \item Discuss how the work embodies or tests the ideas introduced in earlier chapters.  
+    \item Situate the work within disciplinary or creative contexts.  
+\end{itemize}
+
+The purpose of this chapter is to present the central contribution of the dissertation in enough depth that the reader understands both what was made and why it matters. While supporting materials (e.g., code, media, datasets) may be included in appendices or digital archives, this chapter serves as the primary written record of the creative or case-study component of the research.  
+
+\subsection{How to Include and Reference Figures}
+\textit{Below is an excerpt from Michael Palumbo's dissertation that demonstrates how listings are created, how to include code snippets, and how to reference an appendix}
+
+--- (begin excerpt)
+
+\subsubsection{Excerpt from Michael's Dissertation}
+Finally, a callback is triggered to sync the updated state with any connected peers, refresh the synth visual state, pass the change to the DSP engine, and redraw the patch history graph, as can bee seen in Listing~\ref{lst:onChange-callback} below. 
+
+\begin{lstlisting}[language=JavaScript, caption={The onChange callback is triggered after a successful \texttt{patchHistory} document update within the function \texttt{applyChange()}. It handles peer synchronization, flags the document for saving to IndexedDB, updates the server-rendered history graph, and clears the audio dirty flag if needed.}, label={lst:onChange-callback}]
+// the onChange Callback
+onChange = () => {
+    // send to peer(s)
+    sendSyncMessage()
+    // set docUpdated so that indexedDB will save it
+    docUpdated = true
+    // update the historyGraph in the server
+    reDrawHistoryGraph()
+    // set audioDirty flag
+    if(audioGraphDirty){
+        audioGraphDirty = false
+}
+
+\end{lstlisting}
+
+When a player clicks on a \texttt{changeNode} in the patch history DAG, its branch name and hash are passed to the \texttt{loadVersion()} function, which then loads the corresponding state from the patch history and restores the associated synth configuration and/or patch history sequencer state (see Listing~\ref{lst:loadVersion-function} in Appendix~\ref{app:synthAppExcerpts}).
+
+\begin{figure}[ht]
+  \centering
+  \textbf{Original Deltas:} \quad A $\rightarrow$ B $\rightarrow$ C
+  \caption[Patch Deltas]{Forward sequence of original patch deltas}
+  \label{fig:original-deltas}
+\end{figure}
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{c p{5.5cm} p{5.5cm}}
+    \toprule
+    \textbf{Step} & \textbf{Action (Original Delta)} & \textbf{Inverse Delta} \\
+    \midrule
+    1 & Add cable from Osc $\rightarrow$ Filter & Disconnect cable Osc $\rightarrow$ Filter \\
+    2 & Add cable from Filter $\rightarrow$ Output & Disconnect cable Filter $\rightarrow$ Output \\
+    3 & Disconnect cable LFO $\rightarrow$ Osc & Add cable LFO $\rightarrow$ Osc \\
+    \bottomrule
+  \end{tabular}
+  \caption[Patching Deltas]{Patching deltas}
+  \label{tab:patch-inversion}
+\end{table}
+
+In systems based on deltas, reverting to an earlier version would require applying the inverse actions in reverse order, as shown in Figure~\ref{fig:inverse-deltas}
+
+
+\begin{figure}[ht]
+  \centering
+  \textbf{Inverse Actions to Undo:} \quad C$^{-1}$ $\rightarrow$ B$^{-1}$ $\rightarrow$ A$^{-1}$
+  \caption[Patch Delta Inversions]{Inversion sequence to revert patch to earlier state}
+  \label{fig:inverse-deltas}
+\end{figure}
+
+Like the Synth View, the patch history sequencer stays fully synchronized across all players in a multiplayer session: step changeNodes, step lengths, mode selections, tempo changes, transport start/stop commands, and clear-sequencer actions (see Figure~\ref{fig:sequencer-sync}). 
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{__Figures/MP - Sequencer Syncd.png}
+    \caption[Sequencer Synchronization]{Real-time sequencer sync between two Forking Paths windows, with the left player’s cursor shown as a red dot on the right.}
+    \label{fig:sequencer-sync}
+\end{figure}
+
+\chapter{Evaluation and Discussion}
+
+This chapter presents the evaluation of the research outcomes and reflects on their broader implications. Depending on the discipline, evaluation may involve user studies, expert feedback, performance documentation, case analyses, or critical reflection.  
+
+The goals of this chapter are threefold:  
+1. To provide evidence that the work achieves its intended aims.  
+2. To situate the findings within wider scholarly, creative, or technical contexts.  
+3. To discuss limitations and propose directions for future work.  
+
+\section{Evaluation Methods}
+Describe how the work was evaluated (e.g., user testing, critical analysis, field studies, performance documentation).  
+
+\section{Findings}
+Present the results of the evaluation in a clear and organized way. Use tables, figures, or quotations where appropriate.  
+
+\section{Discussion}
+Interpret the findings, highlight strengths and weaknesses, and connect them back to the research questions or objectives.  
+
+\section{Future Work}
+Outline potential extensions, improvements, or new research directions that build on the contributions of this dissertation.
+
+
+\chapter{Conclusion}
+
+
+Write your conclusion chapter here. 
+
+
+
+%   BACK MATTER  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%   References and appendices. Appendices come after the bibliography and
+%   should be in the order that they are referred to in the text.
+%
+%   If you include figures, etc. in an appendix, be sure to use
+%
+%       \caption[]{...}
+%
+%   to make sure they are not listed in the List of Figures.
+%
+
+\backmatter%
+\printbibliography[heading=bibintoc,title={Bibliography}]
+
+    % \addcontentsline{toc}{chapter}{Bibliography} % adds “Bibliography” to the ToC
+    % % \addtoToC{Bibliography}
+    % \bibliographystyle{chicago}
+    % \bibliography{references}
+
+\begin{appendices} % optional
+
+% % playtest questions
+% \include{appendix/appendix-playtest-questions}
+
+% synthApp code fragments
+\include{appendix/appendix-synthAppExcerpts.tex}
+
+% patchHistory code fragments
+% \include{appendix/appendix-patchHistoryExcerpts.tex}
+
+% Server.js
+% \include{appendix/appendix-server}
+
+% % BuildHistoryGraph.js
+% \include{appendix/appendix-buildHistoryGraph}
+
+% % DSP audioWorklet
+% \include{appendix/appendix-customDSP}
+
+% % Modules Spec
+% \include{appendix/appendix-moduleSpec}
+
+% % .fpsynth File
+% \include{appendix/appendix-fpsynthFile}
+
+% % config file
+% \include{appendix/appendix-config}
+
+
+
+\end{appendices}
+
+\end{document}
